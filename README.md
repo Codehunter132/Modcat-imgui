@@ -19,7 +19,7 @@ The project consists of a native C++ layer (JNI) that renders Dear ImGui using O
 To add this mod menu to an existing game (APK modding), follow these general steps:
 
 1. **Decompile**: Decompile the target APK using MT Manager or APKTool.
-2. **Add Files**: Place `libCatmodRX.so` in the `lib` folder and add the `com.Cat.mod` Java classes.
+2. **Add Files**: Place `libCatmodRX.so` in the `lib` folder
 3. **Inject Code**: Find the main Activity's `onCreate` method in Smali and add the initialization call:
    ```smali
    invoke-static {p0}, Lcom/Cat.mod/ModMenu;->init(Landroid/content/Context;)V
@@ -42,4 +42,4 @@ For a more detailed guide, see [INTEGRATION.md](./INTEGRATION.md).
 
 ---
 Developed by **CatmodRX**
-Telegram: [@CatmodRX_op_mods](https://t.me/CatmodRX_op_mods)
+Telegram: [@Catmod](https://t.me/@Aayushisgod)
