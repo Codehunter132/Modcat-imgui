@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modcat Admin Panel</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #121212; color: #fff; text-align: center; padding: 50px; }
+        .container { max-width: 600px; margin: 0 auto; background: #1e1e1e; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        input, button { padding: 10px; margin: 10px 0; width: 80%; border-radius: 4px; border: 1px solid #333; background: #2a2a2a; color: #fff; }
+        button { background: #e91e63; color: white; cursor: pointer; border: none; font-weight: bold; }
+        button:hover { background: #c2185b; }
+        table { width: 100%; margin-top: 20px; border-collapse: collapse; }
+        th, td { padding: 10px; border: 1px solid #333; }
+        th { background: #e91e63; }
+        .delete-btn { background: #d32f2f; width: auto; padding: 5px 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container" id="login-panel">
+    <h2>Admin Login</h2>
+    <input type="password" id="password" placeholder="Admin Password">
+    <button onclick="login()">Login</button>
+</div>
+
+<div class="container" id="admin-panel" style="display:none;">
+    <h2>Key Management</h2>
+    <input type="text" id="new-key" placeholder="Enter custom key (or leave blank to auto-generate)">
+    <input type="number" id="days" placeholder="Expiry in days (0 for never)">
+    <button onclick="createKey()">Create Key</button>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Key</th>
+                <th>Expires</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="keys-table"></tbody>
+    </table>
+</div>
+
+<script>
+    let token = localStorage.getItem('token');
+
+    if (token) {
+        document.getElementById('login-panel').style.display = 'none';
+        document.getElementById('admin-panel').style.display = 'block';
+        loadKeys();
+    }
+
+    async function login() {
+        const pass = document.getElementById('password').value;
+        const res = await fetch('/api/admin/login', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ password: pass })
+        });
+        const data = await res.json();
+        if (data.success) {
+            token = data.token;
+            localStorage.setItem('token', token);
+            document.getElementById('login-panel').style.display = 'none';
+            document.getElementById('admin-panel').style.display = 'block';
+            loadKeys();
+        } else {
+            alert('Login failed');
+        }
+    }
+
+    function generateRandomKey() {
+        return 'MODCAT-' + Math.random().toString(36).substr(2, 8).toUpperCase();
+    }
+
+    async function createKey() {
+        let key = document.getElementById('new-key').value;
+        if (!key) key = generateRandomKey();
+        const days = document.getElementById('days').value || 0;
+
+        await fetch('/api/admin/keys', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ token, key, days })
+        });
+        document.getElementById('new-key').value = '';
+        loadKeys();
+    }
+
+    async function loadKeys() {
+        const res = await fetch('/api/admin/keys?token=' + token);
+        if (res.status === 401) {
+            localStorage.removeItem('token');
+            location.reload();
+            return;
+        }
+        const keys = await res.json();
+        const tbody = document.getElementById('keys-table');
+        tbody.innerHTML = '';
+        keys.forEach(k => {
+            tbody.innerHTML += `<tr>
+                <td>${k.key}</td>
+                <td>${k.expiresAt ? new Date(k.expiresAt).toLocaleDateString() : 'Never'}</td>
+                <td><button class="delete-btn" onclick="deleteKey('${k.key}')">Delete</button></td>
+            </tr>`;
+        });
+    }
+
+    async function deleteKey(key) {
+        if (confirm('Delete this key?')) {
+            await fetch('/api/admin/keys/' + key + '?token=' + token, { method: 'DELETE' });
+            loadKeys();
+        }
+    }
+</script>
+
+</body>
+</html>
