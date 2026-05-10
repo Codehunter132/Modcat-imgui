@@ -42,4 +42,4 @@ For a more detailed guide, see [INTEGRATION.md](./INTEGRATION.md).
 
 ---
 Developed by **CatmodRX**
-Telegram: [@Catmod](https://t.me/@Aayushisgod)
+Telegram: [@Catmod](https://t.me/Nepomdz)
